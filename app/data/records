@@ -1,0 +1,6 @@
+{"k":"0000000078","o":"0000000201","v":"001"}
+{"_id":2,"_uid":2,"_dt":1479744494505,"_s":"d9c358fbc293e766622798016f5a398c"}
+{"userid":"12345678","name":"Susana Oria","instrumentid":"1234","instrumentname":"beaker","date":{"$wrap":"$date","v":1481760000000,"h":"2016-12-15T00:00:00.000Z"},"_id":{"$wrap":"$oid","v":2},"__v":0}
+{"k":"0000000078","o":"0000000211","v":"001"}
+{"_id":3,"_uid":3,"_dt":1479744631087,"_s":"a0de38f18f6eab9826de511d3109bc6b"}
+{"userid":"11235813","name":"Jose Rodriguez","instrumentid":"444","instrumentname":"tubo de ensayo","date":{"$wrap":"$date","v":1479686400000,"h":"2016-11-21T00:00:00.000Z"},"_id":{"$wrap":"$oid","v":3},"__v":0}
