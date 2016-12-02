@@ -2,6 +2,8 @@ var express     		= require('express');
 var app         		= express();
 var bodyParser  		= require('body-parser');
 var morgan				= require('morgan');
+var child_p             = require('child_process');
+var fs 			        = require('fs');
 var tungus 				= require('tungus');
 var mongoose			= require('mongoose');
 var jwt					= require('jsonwebtoken');
@@ -40,12 +42,20 @@ app.get('/', function(req, res) {
 app.listen(port);
 console.log('Starting the server on: http://localhost:' + port);
 
+
+
+//Run subprocess
+child_p.exec('node runtime.js');
+
+
+
+
 // bundle for the routes
 var apiRoutes = express.Router();
 
+
 // Login an user (POST http://localhost:8080/api/login)
 apiRoutes.post('/login', function(req, res) {
-	
 	//Find for a user with the given credentials
 	Administrator.findOne({
 		"username": req.body.username
@@ -100,24 +110,25 @@ apiRoutes.use(function(req, res, next){
 	}
 });
 //Get monthly records of inventory.
-apiRoutes.get('/record/getMonthlyRecords', function(req,res){
-	var month = req.body.date.getMonth();
-	var year = req.body.date.getFullYear();
-	var start = new Date(year, month, 1);
-	var end = new Date(year,month,31);
+apiRoutes.post('/record/getMonthlyRecords', function(req,res){
+	var date = new Date(req.body.date)
+	var month = date.getMonth()
+	var year = date.getFullYear()
+	var start = new Date(year, month, 1)
+	var end = new Date(year,month,31)
 	Record.find({created_on: {$gte: start, $lte: end}},function(err, records){
-		if(err) return console.error(err);		
-		console.log(records);
-		res.send(JSON.stringify(records));
+		if(err) return console.error(err)
+		console.log(records)
+		res.send(JSON.stringify(records))
 	})
 });
 
 //Get all records
 apiRoutes.get('/record/getAll', function(req,res){
 	Record.find({}, 'userid name instrumentid instrumentname date -_id',function(err, records){
-		if(err) return console.error(err);
-		console.log(records);
-		res.send(JSON.stringify(records));
+		if(err) return console.error(err)
+		console.log(records)
+		res.send(JSON.stringify(records))
 	})
 });
 
@@ -128,10 +139,10 @@ apiRoutes.post('/instrument/insertNew', function(req,res){
   			id: req.body.id,
   	  quantity: req.body.quantity
 	}
-	Instrument.create(instrument);
+	Instrument.create(instrument)
 	res.status(200).send({
 		success:true
-	});
+	})
 });
 
 //Add new lab user
@@ -143,41 +154,50 @@ apiRoutes.post('/user/newUser', function(req, res){
 	User.create(user);
 	res.status(200).send({
 		success:true
-	});
+	})
 });
 
 //Get stock
 apiRoutes.get('/instrument/getAll', function(req, res){
 	Instrument.find({}, 'id name quantity -_id', function(err, instruments){
-		if(err) return console.error(err);
-		console.log(instruments);
-		res.send(JSON.stringify(instruments));
+		if(err) return console.error(err)
+		console.log(instruments)
+		res.send(JSON.stringify(instruments))
 	})
 });
 
 //Update stock
 apiRoutes.post('/instrument/update', function(req,res){
 	var parameter = {id: req.body.id},
-	update = { quantity: req.body.quantity};
+	update = { quantity: req.body.quantity}
 	Instrument.findOneAndUpdate(parameter, update, {upsert:true}, function(err, doc){
-    if (err) return res.send(500, { error: err });
-    return res.send("succesfully updated");
-	});		
+    if (err) return res.send(500, { error: err })
+    return res.send("succesfully updated")
+	})
 });
 
 //Add new record
 apiRoutes.post('/record/newRecord', function(req, res){
+	var date = new Date()
+	var dateF = date.toString('dd-MM-yyyy')
+	Instrument.findOne({ 'id': req.body.instrumentid }, 'name', function(err1, inst){
+    if (err1) return res.send(500, { error: err1 })})
+
 	var record = {
 		userid: req.body.userid,
 		name: req.body.name,
 		instrumentid: req.body.instrumentid,
-		instrumentname: req.body.instrumentname,
-		date: req.body.date
+		instrumentname: inst.id,
+		date: dateF
 	}
-	Record.create(record);
+	Record.create(record)
+	var parameter = {id: req.body.instrumentid},
+	update = { $inc : { quantity : -1 } }
+	Instrument.findOneAndUpdate(parameter, update, {upsert:true}, function(err2, doc){
+	if (err2) return res.send(500, { error: err2 })})
 	res.status(200).send({
 		success:true
-	});
+	})
 });
 
 // connect the api routes under /api/*
